@@ -1,11 +1,13 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { ShineBorder } from '@/components/ui/shine-border'
+import { Modal } from '@/components/ui/modal'
 import promoThumb from '../assets/course-math.jpg'
-import { COURSES } from '../data/courses'
+import { COURSES, getCoursesByProgram, getProgramBySlug } from '../data/courses'
 
 const SUBJECTS = ['Mathematics', 'Science', 'Technology', 'Arts & Design']
 const AVAILABILITY = ['Morning', 'Afternoon', 'Evening', 'Weekend']
+const LANGUAGES = ['English', 'Spanish', 'French', 'Hindi']
 
 const TOP_TEACHERS = [
   'https://avatars.githubusercontent.com/u/16860528',
@@ -47,20 +49,116 @@ function ChevronIcon() {
   )
 }
 
+function PlayIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
+      <path d="M6 4.5v11l9-5.5-9-5.5z" />
+    </svg>
+  )
+}
+
+function MessageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 5h16v11H8l-4 4V5Z" />
+    </svg>
+  )
+}
+
+function TeaserModal({ course, onClose }) {
+  return (
+    <Modal open onClose={onClose} className="aspect-video max-w-3xl overflow-hidden">
+      {course.teaserVideo ? (
+        <video src={course.teaserVideo} controls autoPlay className="h-full w-full bg-black" />
+      ) : (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-[#111827] text-white">
+          <img src={course.thumb} alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+          <p className="relative text-lg font-bold">Teaser coming soon</p>
+          <p className="relative text-sm text-white/70">{course.title}</p>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
+function InquiryModal({ course, onClose }) {
+  const [sent, setSent] = useState(false)
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    setSent(true)
+  }
+
+  return (
+    <Modal open onClose={onClose} className="max-w-md p-7">
+      {sent ? (
+        <div className="py-6 text-center">
+          <h3 className="mb-2 text-xl font-bold text-on-surface">Thanks for reaching out!</h3>
+          <p className="text-sm text-on-surface-variant">
+            We&apos;ll get back to you about <span className="font-semibold">{course.title}</span> shortly.
+          </p>
+        </div>
+      ) : (
+        <>
+          <h3 className="mb-1 text-xl font-bold text-on-surface">Ask a question</h3>
+          <p className="mb-5 text-sm text-on-surface-variant">About &ldquo;{course.title}&rdquo;</p>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+            <input
+              type="text"
+              required
+              placeholder="Your name"
+              className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+            />
+            <input
+              type="email"
+              required
+              placeholder="Email address"
+              className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+            />
+            <textarea
+              required
+              rows={4}
+              placeholder="What would you like to know?"
+              className="resize-none rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+            />
+            <button
+              type="submit"
+              className="rounded-lg bg-secondary py-2.5 text-sm font-bold text-white transition-colors hover:bg-secondary-hover"
+            >
+              Send Inquiry
+            </button>
+          </form>
+        </>
+      )}
+    </Modal>
+  )
+}
+
 function CourseCard({ course }) {
+  const monthly = course.price
+  const annualFull = course.price * 12
+  const annual = annualFull * 0.7
+  const [activeModal, setActiveModal] = useState(null)
+
+  const openModal = (e, modal) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setActiveModal(modal)
+  }
+
   return (
     <Link
       to={`/courses/${course.slug}`}
-      className="block overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest transition-shadow hover:shadow-[var(--shadow-card-md)]"
+      className="flex h-full flex-col overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest transition-shadow hover:shadow-[var(--shadow-card-md)]"
     >
-      <div className="relative h-40">
+      <div className="relative h-40 shrink-0">
         <img src={course.thumb} alt="" className="h-full w-full object-cover" />
         <span className={`absolute top-4 left-4 rounded-md px-3 py-1 text-xs font-semibold ${CATEGORY_STYLES[course.category]}`}>
           {course.category}
         </span>
       </div>
 
-      <div className="p-5">
+      <div className="flex flex-1 flex-col p-5">
         <div className="mb-2 flex items-center gap-1.5 text-sm">
           <StarIcon />
           <span className="font-semibold text-on-surface">{course.rating}</span>
@@ -69,13 +167,24 @@ function CourseCard({ course }) {
 
         <h3 className="mb-2 text-lg leading-snug font-bold text-on-surface">{course.title}</h3>
 
-        <div className="mb-4 flex items-center gap-2">
-          <img src={course.teacherAvatar} alt="" className="h-6 w-6 rounded-full object-cover" />
+        <div className="mb-4 flex items-center gap-2.5">
+          <img src={course.teacherAvatar} alt="" className="h-9 w-9 rounded-full object-cover" />
           <span className="text-sm text-on-surface-variant">{course.teacher}</span>
         </div>
 
-        <div className="flex items-center justify-between border-t border-surface-dim pt-4">
-          <span className="text-lg font-bold text-secondary">${course.price.toFixed(2)}</span>
+        <div className="flex-1" />
+
+        <div className="mb-4 flex items-center justify-between border-t border-surface-dim pt-4">
+          <div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-lg font-bold text-secondary">${monthly.toFixed(2)}</span>
+              <span className="text-xs text-on-surface-variant">/mo</span>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs text-on-surface-variant line-through">${annualFull.toFixed(0)}</span>
+              <span className="text-xs font-semibold text-success">${annual.toFixed(0)}/yr</span>
+            </div>
+          </div>
           <span
             role="button"
             aria-label={`Add ${course.title} to cart`}
@@ -84,18 +193,55 @@ function CourseCard({ course }) {
             <CartIcon />
           </span>
         </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={(e) => openModal(e, 'teaser')}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-surface-dim py-2.5 text-sm font-semibold text-on-surface transition-colors hover:border-secondary hover:text-secondary"
+          >
+            <PlayIcon />
+            Teaser
+          </button>
+          <button
+            type="button"
+            onClick={(e) => openModal(e, 'inquiry')}
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-surface-dim py-2.5 text-sm font-semibold text-on-surface transition-colors hover:border-secondary hover:text-secondary"
+          >
+            <MessageIcon />
+            Enquire
+          </button>
+        </div>
       </div>
+
+      {activeModal === 'teaser' && (
+        <TeaserModal course={course} onClose={() => setActiveModal(null)} />
+      )}
+      {activeModal === 'inquiry' && (
+        <InquiryModal course={course} onClose={() => setActiveModal(null)} />
+      )}
     </Link>
   )
 }
 
 function Courses() {
+  const { programSlug } = useParams()
+  const program = programSlug ? getProgramBySlug(programSlug) : null
+  const courses = programSlug ? getCoursesByProgram(programSlug) : COURSES
+
   const [subjects, setSubjects] = useState(['Mathematics'])
   const [availability, setAvailability] = useState('Afternoon')
+  const [languages, setLanguages] = useState(['English'])
 
   const toggleSubject = (subject) => {
     setSubjects((prev) =>
       prev.includes(subject) ? prev.filter((s) => s !== subject) : [...prev, subject]
+    )
+  }
+
+  const toggleLanguage = (language) => {
+    setLanguages((prev) =>
+      prev.includes(language) ? prev.filter((l) => l !== language) : [...prev, language]
     )
   }
 
@@ -110,6 +256,7 @@ function Courses() {
               onClick={() => {
                 setSubjects([])
                 setAvailability(null)
+                setLanguages([])
               }}
               className="text-sm font-semibold text-secondary"
             >
@@ -166,6 +313,23 @@ function Courses() {
           </div>
 
           <div className="mb-6">
+            <h3 className="mb-3 text-sm font-bold text-on-surface">Language</h3>
+            <div className="flex flex-col gap-2.5">
+              {LANGUAGES.map((language) => (
+                <label key={language} className="flex items-center gap-2.5 text-sm text-on-surface-variant">
+                  <input
+                    type="checkbox"
+                    checked={languages.includes(language)}
+                    onChange={() => toggleLanguage(language)}
+                    className="h-4 w-4 rounded border-surface-dim accent-secondary"
+                  />
+                  {language}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-6">
             <h3 className="mb-3 text-sm font-bold text-on-surface">Top Teachers</h3>
             <div className="flex items-center">
               {TOP_TEACHERS.map((url) => (
@@ -207,9 +371,13 @@ function Courses() {
         <div className="max-lg:order-1">
           <div className="mb-8 flex items-end justify-between max-sm:flex-col max-sm:items-start max-sm:gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-on-surface">Explore Courses</h1>
+              <h1 className="text-2xl font-bold text-on-surface">
+                {program ? program.label : 'Explore Courses'}
+              </h1>
               <p className="mt-1 text-sm text-on-surface-variant">
-                Showing 1,240 results in Mathematics &amp; High School
+                {program
+                  ? `Showing ${courses.length} course${courses.length === 1 ? '' : 's'} in ${program.label}`
+                  : 'Showing 1,240 results in Mathematics & High School'}
               </p>
             </div>
 
@@ -222,11 +390,17 @@ function Courses() {
             </label>
           </div>
 
-          <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
-            {COURSES.map((course) => (
-              <CourseCard key={course.slug} course={course} />
-            ))}
-          </div>
+          {courses.length > 0 ? (
+            <div className="grid grid-cols-3 gap-6 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              {courses.map((course) => (
+                <CourseCard key={course.slug} course={course} />
+              ))}
+            </div>
+          ) : (
+            <p className="rounded-2xl border border-dashed border-surface-dim py-16 text-center text-on-surface-variant">
+              No courses in this program yet.
+            </p>
+          )}
         </div>
       </div>
     </div>

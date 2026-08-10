@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Hero from './components/Hero'
+import Programs from './components/Programs'
 import WhyChoose from './components/WhyChoose'
 import Journey from './components/Journey'
 import PopularCourses from './components/PopularCourses'
@@ -14,6 +15,7 @@ function Landing() {
   return (
     <>
       <Hero />
+      <Programs />
       <WhyChoose />
       <Journey />
       <PopularCourses />
@@ -29,6 +31,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/program/:programSlug" element={<Courses />} />
         <Route path="/courses/:slug" element={<CourseDetail />} />
         <Route path="/mentors" element={<Mentors />} />
       </Routes>

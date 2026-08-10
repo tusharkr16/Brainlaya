@@ -4,10 +4,23 @@ import designThumb from '../assets/course-design.jpg'
 import techThumb from '../assets/course-tech.jpg'
 import astroThumb from '../assets/course-astro.jpg'
 
+export const PROGRAMS = [
+  { slug: 'academic-live', label: 'Academic Live' },
+  { slug: 'applied-academic-learning', label: 'Applied Academic Learning' },
+  { slug: 'professional-learning', label: 'Professional Learning' },
+  { slug: 'self-paced-learning', label: 'Self Paced Learning' },
+  { slug: 'other-learning', label: 'Other Learning' },
+]
+
+export function getProgramBySlug(slug) {
+  return PROGRAMS.find((program) => program.slug === slug)
+}
+
 export const COURSES = [
   {
     slug: 'advanced-calculus-analytic-geometry',
     category: 'Mathematics',
+    program: 'academic-live',
     thumb: mathThumb,
     rating: 4.9,
     reviews: '1.2k',
@@ -41,6 +54,7 @@ export const COURSES = [
   {
     slug: 'introduction-to-molecular-biology',
     category: 'Science',
+    program: 'applied-academic-learning',
     thumb: scienceThumb,
     rating: 4.7,
     reviews: '840',
@@ -74,6 +88,7 @@ export const COURSES = [
   {
     slug: 'ui-ux-foundations-for-teens',
     category: 'Arts & Design',
+    program: 'professional-learning',
     thumb: designThumb,
     rating: 5.0,
     reviews: '450',
@@ -114,6 +129,7 @@ export const COURSES = [
   {
     slug: 'python-for-future-engineers',
     category: 'Technology',
+    program: 'self-paced-learning',
     thumb: techThumb,
     rating: 4.8,
     reviews: '2.1k',
@@ -147,6 +163,7 @@ export const COURSES = [
   {
     slug: 'astrophysics-beyond-the-solar-system',
     category: 'Science',
+    program: 'other-learning',
     thumb: astroThumb,
     rating: 4.6,
     reviews: '310',
@@ -181,6 +198,10 @@ export const COURSES = [
 
 export function getCourseBySlug(slug) {
   return COURSES.find((course) => course.slug === slug)
+}
+
+export function getCoursesByProgram(programSlug) {
+  return COURSES.filter((course) => course.program === programSlug)
 }
 
 export function getRelatedCourses(slug, count = 2) {

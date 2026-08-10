@@ -37,10 +37,6 @@ function Hero() {
     <section className="px-16 pt-20 pb-32 max-lg:px-6 max-lg:pt-10 max-lg:pb-14">
       <div className="mx-auto grid max-w-[1560px] grid-cols-2 items-center gap-20 max-lg:grid-cols-1 max-lg:gap-10 max-lg:text-center">
         <div>
-          <span className="mb-6 inline-flex items-center rounded-full bg-primary px-4 py-2 text-sm font-semibold text-on-primary">
-            New Courses for 2024
-          </span>
-
           <h1 className="mb-6 text-[52px] leading-[1.15] font-extrabold tracking-tight text-on-surface max-lg:text-4xl">
             Learn from great teachers.
             <br />
