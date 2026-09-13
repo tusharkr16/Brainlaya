@@ -4,22 +4,11 @@ import designThumb from '../assets/course-design.jpg'
 import techThumb from '../assets/course-tech.jpg'
 import astroThumb from '../assets/course-astro.jpg'
 
-export const PROGRAMS = [
-  { slug: 'academic-live', label: 'Academic Live' },
-  { slug: 'applied-academic-learning', label: 'Applied Academic Learning' },
-  { slug: 'professional-learning', label: 'Professional Learning' },
-  { slug: 'self-paced-learning', label: 'Self Paced Learning' },
-  { slug: 'other-learning', label: 'Other Learning' },
-]
-
-export function getProgramBySlug(slug) {
-  return PROGRAMS.find((program) => program.slug === slug)
-}
-
 export const COURSES = [
   {
     slug: 'advanced-calculus-analytic-geometry',
     category: 'Mathematics',
+    status: 'approved',
     program: 'academic-live',
     thumb: mathThumb,
     rating: 4.9,
@@ -54,6 +43,7 @@ export const COURSES = [
   {
     slug: 'introduction-to-molecular-biology',
     category: 'Science',
+    status: 'approved',
     program: 'applied-academic-learning',
     thumb: scienceThumb,
     rating: 4.7,
@@ -88,6 +78,7 @@ export const COURSES = [
   {
     slug: 'ui-ux-foundations-for-teens',
     category: 'Arts & Design',
+    status: 'approved',
     program: 'professional-learning',
     thumb: designThumb,
     rating: 5.0,
@@ -129,6 +120,7 @@ export const COURSES = [
   {
     slug: 'python-for-future-engineers',
     category: 'Technology',
+    status: 'approved',
     program: 'self-paced-learning',
     thumb: techThumb,
     rating: 4.8,
@@ -163,6 +155,7 @@ export const COURSES = [
   {
     slug: 'astrophysics-beyond-the-solar-system',
     category: 'Science',
+    status: 'approved',
     program: 'other-learning',
     thumb: astroThumb,
     rating: 4.6,
@@ -195,15 +188,3 @@ export const COURSES = [
     ],
   },
 ]
-
-export function getCourseBySlug(slug) {
-  return COURSES.find((course) => course.slug === slug)
-}
-
-export function getCoursesByProgram(programSlug) {
-  return COURSES.filter((course) => course.program === programSlug)
-}
-
-export function getRelatedCourses(slug, count = 2) {
-  return COURSES.filter((course) => course.slug !== slug).slice(0, count)
-}

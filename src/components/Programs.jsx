@@ -120,7 +120,7 @@ function Programs() {
           {PROGRAMS.map(({ slug, icon: Icon, title, body, tint, soft, glow }) => (
             <Link
               key={slug}
-              to={`/courses/program/${slug}`}
+              to="/courses"
               className="group relative flex flex-col overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest p-6 shadow-[var(--shadow-card-sm)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[var(--shadow-card-md)]"
             >
               <span className={`absolute inset-x-0 top-0 h-1 ${tint}`} />

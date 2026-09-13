@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { useAuthStore } from '../store/authStore'
+
+const HOME_BY_ROLE = { teacher: '/teacher', student: '/student', admin: '/admin' }
 
 const NAV_LINKS = [
   { label: 'Courses', href: '/courses' },
@@ -31,6 +34,7 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const { pathname } = useLocation()
+  const user = useAuthStore((s) => s.user)
 
   const isLanding = pathname === '/'
 
@@ -88,15 +92,26 @@ function Navbar() {
             />
           </label>
 
-          <a href="#login" className="whitespace-nowrap px-1 py-2 text-[15px] font-semibold text-on-surface max-lg:hidden">
-            Log In
-          </a>
-          <a
-            href="#signup"
-            className="whitespace-nowrap rounded-full bg-secondary px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-secondary-hover max-lg:hidden"
-          >
-            Sign Up
-          </a>
+          {user ? (
+            <Link
+              to={HOME_BY_ROLE[user.role] || '/'}
+              className="whitespace-nowrap rounded-full bg-secondary px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-secondary-hover max-lg:hidden"
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <>
+              <Link to="/login" className="whitespace-nowrap px-1 py-2 text-[15px] font-semibold text-on-surface max-lg:hidden">
+                Log In
+              </Link>
+              <Link
+                to="/signup"
+                className="whitespace-nowrap rounded-full bg-secondary px-5 py-2.5 text-[15px] font-semibold text-white transition-colors hover:bg-secondary-hover max-lg:hidden"
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
           <button
             type="button"
@@ -152,18 +167,32 @@ function Navbar() {
             </nav>
 
             <div className="mt-auto flex flex-col gap-3">
-              <a
-                href="#login"
-                className="rounded-lg border border-surface-dim px-5 py-3 text-center text-[15px] font-semibold text-on-surface"
-              >
-                Log In
-              </a>
-              <a
-                href="#signup"
-                className="rounded-lg bg-secondary px-5 py-3 text-center text-[15px] font-semibold text-white"
-              >
-                Sign Up
-              </a>
+              {user ? (
+                <Link
+                  to={HOME_BY_ROLE[user.role] || '/'}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-lg bg-secondary px-5 py-3 text-center text-[15px] font-semibold text-white"
+                >
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="rounded-lg border border-surface-dim px-5 py-3 text-center text-[15px] font-semibold text-on-surface"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/signup"
+                    onClick={() => setMenuOpen(false)}
+                    className="rounded-lg bg-secondary px-5 py-3 text-center text-[15px] font-semibold text-white"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

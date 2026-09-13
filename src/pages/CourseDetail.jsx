@@ -1,73 +1,19 @@
-import { useState } from 'react'
-import { Link, useParams, Navigate } from 'react-router-dom'
-import { getCourseBySlug, getRelatedCourses } from '../data/courses'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useCourse, useCourses } from '../api/courses'
+import { useEnroll, useUnenroll, useMyEnrollments } from '../api/enrollments'
+import { useLessons } from '../api/lessons'
+import { useTeacherProfile } from '../api/users'
+import { useAuthStore } from '../store/authStore'
+import { getSocket } from '../lib/socket'
+import { LoadingState, ErrorState } from '../components/StateViews'
 
-function StarIcon({ filled = true }) {
-  return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill={filled ? '#f59e0b' : '#d9dada'} aria-hidden="true">
-      <path d="M10 1.5l2.47 5.53 6.03.62-4.53 4.05 1.3 5.9L10 14.77l-5.27 2.83 1.3-5.9L1.5 7.65l6.03-.62L10 1.5z" />
-    </svg>
-  )
-}
+const IMG_BASE = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001'
 
-function ClockIcon() {
+function ChevronRightIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3.5 2" />
-    </svg>
-  )
-}
-
-function LanguageIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 6h9M8.5 4v2.5c0 3.5-2 6-5 7.5M6 10.5c1.5 1.8 4 3 7 3" />
-      <path d="m13 20 3.5-8L20 20M14.2 17.5h4.6" />
-    </svg>
-  )
-}
-
-function RefreshIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 12a8 8 0 0 1 14-5.2M20 12a8 8 0 0 1-14 5.2" />
-      <path d="M18 4v3.5h-3.5M6 20v-3.5h3.5" />
-    </svg>
-  )
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#1d4e43" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="m8.5 12.5 2.3 2.3L16 10" />
-    </svg>
-  )
-}
-
-function InfinityIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M7 9a3 3 0 1 0 0 6c2.5 0 4.5-6 7-6a3 3 0 1 1 0 6c-2.5 0-4.5-6-7-6Z" />
-    </svg>
-  )
-}
-
-function DeviceIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="7" y="2" width="10" height="16" rx="1.5" />
-      <path d="M4 9v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9" />
-    </svg>
-  )
-}
-
-function CertificateIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="8" r="5" />
-      <path d="m8.5 12.5-1.5 8 5-2.5 5 2.5-1.5-8" />
+    <svg viewBox="0 0 20 20" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m7.5 5 5 5-5 5" />
     </svg>
   )
 }
@@ -80,20 +26,50 @@ function ChevronDownIcon({ open }) {
       height="18"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
-      className={open ? 'rotate-180 transition-transform' : 'transition-transform'}
+      className={`shrink-0 text-on-surface-variant transition-transform ${open ? 'rotate-180' : ''}`}
     >
       <path d="m5 7.5 5 5 5-5" />
     </svg>
   )
 }
 
-function PlayIcon() {
+function UsersIcon() {
   return (
-    <svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true">
-      <path d="M6 4.5v11l9-5.5-9-5.5z" />
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 19c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5" />
+      <circle cx="17" cy="9" r="2.6" />
+      <path d="M15.2 14.3c1.9.4 3.4 1.9 3.8 4.2" />
+    </svg>
+  )
+}
+
+function BookIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 6.5c-1.8-1.3-4.2-2-6.5-2A2 2 0 0 0 3.5 6.5v11c0 .8.6 1.3 1.4 1.1 2-.4 4.3.1 6 1.4V6.5Z" />
+      <path d="M12 6.5c1.8-1.3 4.2-2 6.5-2a2 2 0 0 1 2 2v11c0 .8-.6 1.3-1.4 1.1-2-.4-4.3.1-6 1.4V6.5Z" />
+    </svg>
+  )
+}
+
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  )
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-brand-green">
+      <circle cx="10" cy="10" r="7.5" />
+      <path d="m7 10 2 2 4-4" />
     </svg>
   )
 }
@@ -101,323 +77,328 @@ function PlayIcon() {
 function LinkIcon() {
   return (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9.5 14.5 14.5 9.5" />
-      <path d="M11 7.5 12.5 6a3 3 0 1 1 4.2 4.2L15 11.7M13 16.5 11.5 18a3 3 0 1 1-4.2-4.2L9 12.3" />
-    </svg>
-  )
-}
-
-function GlobeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18Z" />
+      <path d="M9 15 15 9" />
+      <path d="M11 6.5 12.5 5a3.5 3.5 0 0 1 5 5L16 11.5" />
+      <path d="M13 17.5 11.5 19a3.5 3.5 0 0 1-5-5L8 12.5" />
     </svg>
   )
 }
 
 function MailIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path d="m4 7 8 6 8-6" />
     </svg>
   )
 }
 
-const RATING_BREAKDOWN = [
-  { stars: 5, pct: 92 },
-  { stars: 4, pct: 6 },
-  { stars: 3, pct: 2 },
-]
-
-const REVIEWS = [
-  {
-    initials: 'JD',
-    name: 'Jameson Davis',
-    time: '2 weeks ago',
-    body: 'This course completely changed how I approach my work. The strategic frameworks are immediately applicable and helped me secure a promotion within a month of completing the curriculum.',
-  },
-]
-
-function CurriculumSection({ curriculum }) {
-  const [openIndex, setOpenIndex] = useState(0)
-
+function LockIcon() {
   return (
-    <div className="flex flex-col gap-4">
-      {curriculum.map((module, i) => {
-        const open = openIndex === i
-        return (
-          <div key={module.title} className="overflow-hidden rounded-xl border border-surface-dim bg-surface-container-lowest">
-            <button
-              type="button"
-              onClick={() => setOpenIndex(open ? -1 : i)}
-              className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-            >
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-surface-dim">{String(i + 1).padStart(2, '0')}</span>
-                <div>
-                  <p className="font-bold text-on-surface">{module.title}</p>
-                  <p className="text-sm text-on-surface-variant">{module.meta}</p>
-                </div>
-              </div>
-              <ChevronDownIcon open={open} />
-            </button>
-
-            {open && module.lessons && (
-              <div className="border-t border-surface-dim px-5 py-2">
-                {module.lessons.map((lesson) => {
-                  const label = typeof lesson === 'string' ? lesson : lesson.title
-                  const duration = typeof lesson === 'string' ? null : lesson.duration
-                  return (
-                    <div key={label} className="flex items-center justify-between gap-4 py-3">
-                      <span className="flex items-center gap-3 text-sm text-on-surface">
-                        <PlayIcon />
-                        {label}
-                      </span>
-                      {duration && <span className="text-sm text-on-surface-variant">{duration}</span>}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )
-      })}
-    </div>
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </svg>
   )
 }
 
+const WHATS_INCLUDED = [
+  'Full lifetime access',
+  'Learn at your own pace',
+  "Direct updates from your instructor",
+  'Access on any device',
+]
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 function CourseDetail() {
-  const { slug } = useParams()
-  const course = getCourseBySlug(slug)
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const user = useAuthStore((s) => s.user)
+  const { data, isPending, isError, error, refetch } = useCourse(id)
+  const course = data?.data
+
+  const { data: myEnrollments } = useMyEnrollments(user?.role === 'student')
+  const isEnrolled = (myEnrollments?.data || []).some((e) => e.course._id === id)
+  const isOwner = Boolean(user && course && user.id === course.teacherId?._id)
+  const canSeeLessons = Boolean(user && (isEnrolled || user.role === 'admin' || isOwner))
+  const { data: lessonsData } = useLessons(id, canSeeLessons)
+  const { data: teacherProfile } = useTeacherProfile(course?.teacherId?._id)
+  const { data: relatedData } = useCourses(course ? { category: course.category, limit: 4 } : {}, Boolean(course))
+
+  const enroll = useEnroll()
+  const unenroll = useUnenroll()
+  const [liveCount, setLiveCount] = useState(null)
+  const [expandedLessonId, setExpandedLessonId] = useState(null)
   const [copied, setCopied] = useState(false)
 
-  if (!course) return <Navigate to="/courses" replace />
+  useEffect(() => {
+    const socket = getSocket()
+    if (!socket || !id) return
+    socket.emit('course:watch', id)
+    const onCount = (payload) => {
+      if (payload.courseId === id) setLiveCount(payload.count)
+    }
+    socket.on('course:enrollment-count', onCount)
+    return () => {
+      socket.emit('course:unwatch', id)
+      socket.off('course:enrollment-count', onCount)
+    }
+  }, [id])
 
-  const related = getRelatedCourses(slug)
+  if (isPending) return <div className="mx-auto max-w-5xl px-8 py-16"><LoadingState /></div>
+  if (isError) return <div className="mx-auto max-w-5xl px-8 py-16"><ErrorState message={error.message} onRetry={refetch} /></div>
 
-  const copyLink = () => {
-    navigator.clipboard?.writeText(window.location.href)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
+  const enrollmentCount = liveCount ?? course.enrollmentCount
+  const lessons = lessonsData?.data || []
+  const relatedCourses = (relatedData?.data || []).filter((c) => c._id !== id).slice(0, 3)
+  const teacherCourseCount = teacherProfile?.data?.courses?.length
+
+  const handleEnrollClick = () => {
+    if (!user) return navigate('/login', { state: { from: `/courses/${id}` } })
+    if (isEnrolled) unenroll.mutate(id)
+    else enroll.mutate(id)
+  }
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   return (
     <div className="bg-surface">
-      <div className="bg-[#eef3fb] px-16 py-10 max-lg:px-6">
-        <div className="mx-auto grid max-w-7xl grid-cols-[1fr_460px] gap-14 max-lg:grid-cols-1">
-          <div>
-            <nav className="mb-4 flex items-center gap-2 text-sm text-on-surface-variant">
-              <Link to="/">Home</Link>
-              <span>&gt;</span>
-              <Link to="/courses">Courses</Link>
-              <span>&gt;</span>
-              <span className="font-semibold text-secondary">{course.title}</span>
+      {/* Hero */}
+      <section className="border-b border-surface-dim bg-surface-container-low py-10 lg:py-16">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-8 max-lg:px-5 lg:grid-cols-12">
+          <div className="lg:col-span-7">
+            <nav className="mb-4 flex items-center gap-1.5 text-xs text-on-surface-variant">
+              <Link to="/" className="hover:text-secondary">Home</Link>
+              <ChevronRightIcon />
+              <Link to="/courses" className="hover:text-secondary">Courses</Link>
+              <ChevronRightIcon />
+              <span className="line-clamp-1 text-secondary">{course.title}</span>
             </nav>
 
-            <h1 className="mb-4 text-4xl leading-tight font-extrabold text-on-surface max-lg:text-3xl">
-              {course.title}
-            </h1>
-
-            <div className="mb-5 flex items-center gap-3 text-sm">
-              <span className="flex items-center gap-1 rounded-md bg-accent-design px-2.5 py-1 font-bold text-on-surface">
-                {course.rating}
-                <StarIcon />
-              </span>
-              <span className="text-on-surface-variant">
-                ({course.reviewCount.toLocaleString()} reviews) &bull; {course.enrolled.toLocaleString()} students enrolled
-              </span>
-            </div>
-
-            <p className="mb-6 max-w-xl text-lg leading-relaxed text-on-surface-variant">
-              {course.subtitle}
+            <p className="text-xs font-bold tracking-wide text-secondary uppercase">{course.category}</p>
+            <h1 className="mt-2 text-3xl leading-tight font-extrabold text-on-surface lg:text-4xl">{course.title}</h1>
+            <p className="mt-4 text-on-surface-variant">
+              By <span className="font-semibold text-on-surface">{course.teacherId?.name}</span>
             </p>
 
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm font-medium text-on-surface">
-              <span className="flex items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center gap-5 text-sm text-on-surface-variant">
+              <span className="flex items-center gap-1.5">
+                <UsersIcon />
+                {enrollmentCount.toLocaleString()} enrolled
+              </span>
+              <span className="flex items-center gap-1.5">
+                <BookIcon />
+                {lessons.length || course.lessonCount || 0} lessons
+              </span>
+              <span className="flex items-center gap-1.5">
                 <ClockIcon />
-                {course.duration}
-              </span>
-              <span className="flex items-center gap-2">
-                <LanguageIcon />
-                {course.languages}
-              </span>
-              <span className="flex items-center gap-2">
-                <RefreshIcon />
-                Last updated {course.updated}
+                Updated {formatDate(course.updatedAt)}
               </span>
             </div>
+
+            <p className="mt-6 max-w-2xl whitespace-pre-line text-on-surface-variant">{course.description}</p>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest shadow-[var(--shadow-card-lg)]">
-            <img src={course.thumb} alt="" className="aspect-video w-full object-cover" />
-            <div className="p-6">
-              <div className="mb-5 flex items-center gap-3">
-                <span className="text-3xl font-extrabold text-on-surface">${course.price.toFixed(2)}</span>
-                <span className="text-lg text-on-surface-variant line-through">${course.originalPrice.toFixed(2)}</span>
-                <span className="rounded-md bg-accent-marketing px-2.5 py-1 text-xs font-bold text-brand-green">
-                  {course.discount}
-                </span>
+          {/* Floating enroll card */}
+          <div className="lg:col-span-5">
+            <div className="overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest shadow-[var(--shadow-card-lg)] lg:sticky lg:top-28">
+              <div className="aspect-video bg-accent-design">
+                {course.thumbnail && <img src={`${IMG_BASE}${course.thumbnail}`} alt="" className="h-full w-full object-cover" />}
               </div>
-              <button
-                type="button"
-                className="w-full rounded-lg bg-secondary py-4 text-base font-bold text-white transition-colors hover:bg-secondary-hover"
-              >
-                Enroll Now
-              </button>
+              <div className="p-6">
+                <span className="text-3xl font-extrabold text-on-surface">{course.price ? `$${course.price}` : 'Free'}</span>
+
+                {isOwner ? (
+                  <p className="mt-4 rounded-lg bg-accent-design px-4 py-3 text-sm text-secondary">
+                    This is your course — students see an Enroll button here.
+                  </p>
+                ) : (
+                  (!user || user.role === 'student') && (
+                    <button
+                      type="button"
+                      onClick={handleEnrollClick}
+                      disabled={enroll.isPending || unenroll.isPending}
+                      className={
+                        isEnrolled
+                          ? 'mt-4 w-full rounded-xl border border-error/30 py-3.5 text-sm font-bold text-error transition-colors hover:bg-error/10 disabled:opacity-60'
+                          : 'mt-4 w-full rounded-xl bg-secondary py-3.5 text-sm font-bold text-white transition-colors hover:bg-secondary-hover disabled:opacity-60'
+                      }
+                    >
+                      {enroll.isPending || unenroll.isPending ? 'Please wait…' : isEnrolled ? 'Unenroll' : 'Enroll Now'}
+                    </button>
+                  )
+                )}
+                {isEnrolled && (
+                  <Link to={`/student/courses/${id}`} className="mt-3 block text-center text-sm font-semibold text-secondary hover:underline">
+                    Go to course →
+                  </Link>
+                )}
+                {(enroll.error || unenroll.error) && (
+                  <p role="alert" className="mt-3 rounded-lg bg-error/10 px-4 py-2.5 text-sm font-medium text-error">
+                    {(enroll.error || unenroll.error).message}
+                  </p>
+                )}
+
+                <div className="mt-6 border-t border-surface-dim pt-6">
+                  <h4 className="mb-3 text-sm font-bold text-on-surface">What's included</h4>
+                  <ul className="space-y-2.5">
+                    {WHATS_INCLUDED.map((item) => (
+                      <li key={item} className="flex items-center gap-2.5 text-sm text-on-surface-variant">
+                        <CheckCircleIcon />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="mx-auto max-w-7xl px-16 py-14 max-lg:px-6">
-        <div className="grid grid-cols-[1fr_320px] gap-14 max-lg:grid-cols-1">
-          <div>
-            <h2 className="mb-5 text-3xl font-extrabold text-on-surface">About this Course</h2>
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-7">
-              <p className="mb-6 leading-relaxed text-on-surface-variant">{course.teacherBio}</p>
-
-              <div className="grid grid-cols-2 gap-x-6 gap-y-3 max-sm:grid-cols-1">
-                {course.outcomes.map((outcome) => (
-                  <div key={outcome} className="flex items-center gap-2.5">
-                    <CheckIcon />
-                    <span className="text-sm font-medium text-on-surface">{outcome}</span>
-                  </div>
-                ))}
-              </div>
+      {/* Main content */}
+      <section className="mx-auto max-w-7xl px-8 py-12 max-lg:px-5 lg:grid lg:grid-cols-12 lg:gap-10">
+        <div className="lg:col-span-7">
+          <div className="mb-10">
+            <h2 className="mb-4 text-xl font-bold text-on-surface">About this Course</h2>
+            <div className="rounded-xl border border-surface-dim bg-surface-container-lowest p-6">
+              <p className="whitespace-pre-line text-on-surface-variant">{course.description}</p>
             </div>
-
-            <h2 className="mt-14 mb-5 text-3xl font-extrabold text-on-surface">Course Curriculum</h2>
-            <CurriculumSection curriculum={course.curriculum} />
-
-            <h2 className="mt-14 mb-5 text-3xl font-extrabold text-on-surface">Meet your Teacher</h2>
-            <div className="flex gap-6 rounded-2xl border border-surface-dim bg-surface-container-lowest p-7 max-sm:flex-col">
-              <img src={course.teacherAvatar} alt={course.teacher} className="h-24 w-24 shrink-0 rounded-full object-cover" />
-              <div>
-                <p className="text-xl font-bold text-on-surface">{course.teacher}</p>
-                <p className="mb-3 font-semibold text-secondary">{course.teacherRole}</p>
-                <p className="mb-5 leading-relaxed text-on-surface-variant">{course.teacherBio}</p>
-                <div className="flex gap-8">
-                  <div>
-                    <p className="text-xl font-extrabold text-on-surface">{course.teacherStats.years}</p>
-                    <p className="text-sm text-on-surface-variant">Years Exp.</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-extrabold text-on-surface">{course.teacherStats.students}</p>
-                    <p className="text-sm text-on-surface-variant">Students</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-extrabold text-on-surface">{course.teacherStats.rating}</p>
-                    <p className="text-sm text-on-surface-variant">Avg. Rating</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <h2 className="mt-14 mb-5 flex items-center justify-between text-3xl font-extrabold text-on-surface">
-              Student Reviews
-              <Link to="#" className="text-base font-semibold text-secondary">View All</Link>
-            </h2>
-
-            <div className="mb-6 flex items-center gap-8 rounded-2xl bg-accent-design p-6 max-sm:flex-col max-sm:items-start">
-              <div className="text-center">
-                <p className="text-4xl font-extrabold text-secondary">{course.rating}</p>
-                <div className="my-1 flex justify-center gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <StarIcon key={i} />
-                  ))}
-                </div>
-                <p className="text-sm text-on-surface-variant">Course Rating</p>
-              </div>
-              <div className="flex-1 space-y-2">
-                {RATING_BREAKDOWN.map((row) => (
-                  <div key={row.stars} className="flex items-center gap-3">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-surface-dim">
-                      <div className="h-full rounded-full bg-secondary" style={{ width: `${row.pct}%` }} />
-                    </div>
-                    <span className="w-10 text-sm text-on-surface-variant">{row.pct}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {REVIEWS.map((review) => (
-              <div key={review.name} className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-6">
-                <div className="mb-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-design text-sm font-bold text-secondary">
-                      {review.initials}
-                    </span>
-                    <div>
-                      <p className="font-bold text-on-surface">{review.name}</p>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <StarIcon key={i} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <span className="text-sm text-on-surface-variant">{review.time}</span>
-                </div>
-                <p className="leading-relaxed text-on-surface-variant">"{review.body}"</p>
-              </div>
-            ))}
           </div>
 
-          <div className="flex flex-col gap-6">
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-6">
-              <h3 className="mb-4 font-bold text-on-surface">Course Highlights</h3>
-              <div className="flex flex-col gap-3 text-sm text-on-surface">
-                <span className="flex items-center gap-3">
-                  <InfinityIcon />
-                  {course.highlights[0]}
-                </span>
-                <span className="flex items-center gap-3">
-                  <DeviceIcon />
-                  {course.highlights[1]}
-                </span>
-                <span className="flex items-center gap-3">
-                  <CertificateIcon />
-                  {course.highlights[2]}
-                </span>
+          <div className="mb-10">
+            <h2 className="mb-4 text-xl font-bold text-on-surface">Course Curriculum</h2>
+            {canSeeLessons ? (
+              lessons.length === 0 ? (
+                <p className="rounded-xl border border-dashed border-surface-dim bg-surface-container-lowest p-6 text-sm text-on-surface-variant">
+                  No lessons published yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {lessons.map((lesson, i) => {
+                    const isOpen = expandedLessonId === lesson._id
+                    return (
+                      <div key={lesson._id} className="overflow-hidden rounded-xl border border-surface-dim bg-surface-container-lowest">
+                        <button
+                          type="button"
+                          onClick={() => setExpandedLessonId(isOpen ? null : lesson._id)}
+                          className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left transition-colors hover:bg-surface-container-low"
+                        >
+                          <span className="flex items-center gap-4">
+                            <span className="text-lg font-extrabold text-outline">{String(i + 1).padStart(2, '0')}</span>
+                            <span className="font-semibold text-on-surface">{lesson.title}</span>
+                            {lesson.completed && (
+                              <span className="rounded-full bg-brand-green/15 px-2 py-0.5 text-[11px] font-bold text-brand-green">Done</span>
+                            )}
+                          </span>
+                          <ChevronDownIcon open={isOpen} />
+                        </button>
+                        {isOpen && (
+                          <div className="border-t border-surface-dim px-5 py-4 text-sm whitespace-pre-line text-on-surface-variant">
+                            {lesson.content}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            ) : (
+              <div className="flex items-center gap-3 rounded-xl border border-dashed border-surface-dim bg-surface-container-lowest p-6 text-sm text-on-surface-variant">
+                <LockIcon />
+                {user ? 'Enroll to unlock the full curriculum.' : 'Log in and enroll to unlock the full curriculum.'}
               </div>
-            </div>
+            )}
+          </div>
 
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-6">
-              <h3 className="mb-4 font-bold text-on-surface">Share this course</h3>
-              <button
-                type="button"
-                onClick={copyLink}
-                className="mb-3 flex w-full items-center gap-2 rounded-lg border border-surface-dim px-4 py-2.5 text-sm font-medium text-on-surface"
-              >
-                <LinkIcon />
-                {copied ? 'Copied!' : 'Copy Link'}
-              </button>
-              <div className="flex gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-surface-dim text-on-surface">
-                  <GlobeIcon />
+          <div>
+            <h2 className="mb-4 text-xl font-bold text-on-surface">Meet your Instructor</h2>
+            <div className="flex flex-col gap-5 rounded-xl border border-surface-dim bg-surface-container-lowest p-6 sm:flex-row sm:items-center">
+              {course.teacherId?.avatar ? (
+                <img src={`${IMG_BASE}${course.teacherId.avatar}`} alt="" className="h-20 w-20 shrink-0 rounded-full object-cover" />
+              ) : (
+                <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full bg-accent-design text-2xl font-bold text-secondary">
+                  {course.teacherId?.name?.[0]?.toUpperCase()}
                 </span>
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg border border-surface-dim text-on-surface">
-                  <MailIcon />
-                </span>
-              </div>
-            </div>
-
-            {related.length > 0 && (
+              )}
               <div>
-                <h3 className="mb-4 font-bold text-on-surface">Related Courses</h3>
-                <div className="flex flex-col gap-4">
-                  {related.map((r) => (
+                <h3 className="text-lg font-bold text-on-surface">{course.teacherId?.name}</h3>
+                {teacherCourseCount !== undefined && (
+                  <p className="mt-1 text-sm text-on-surface-variant">
+                    {teacherCourseCount} course{teacherCourseCount === 1 ? '' : 's'} on Brainlaya
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="mt-10 lg:col-span-5 lg:mt-0">
+          <div className="space-y-6 lg:sticky lg:top-28">
+            <div className="rounded-xl border border-surface-dim bg-surface-container-lowest p-6">
+              <h4 className="mb-3 text-sm font-bold text-on-surface">Course Highlights</h4>
+              <ul className="space-y-2.5 text-sm text-on-surface-variant">
+                <li className="flex items-center gap-2.5">
+                  <CheckCircleIcon />
+                  {lessons.length || course.lessonCount || 0} lessons
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircleIcon />
+                  Category: {course.category}
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <CheckCircleIcon />
+                  Last updated {formatDate(course.updatedAt)}
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-surface-dim bg-surface-container-lowest p-6">
+              <h4 className="mb-3 text-sm font-bold text-on-surface">Share this course</h4>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handleCopyLink}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-surface-dim py-2.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
+                >
+                  <LinkIcon />
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+                <a
+                  href={`mailto:?subject=${encodeURIComponent(course.title)}&body=${encodeURIComponent(window.location.href)}`}
+                  aria-label="Share via email"
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-surface-dim transition-colors hover:bg-surface-container-low"
+                >
+                  <MailIcon />
+                </a>
+              </div>
+            </div>
+
+            {relatedCourses.length > 0 && (
+              <div>
+                <h4 className="mb-3 text-sm font-bold text-on-surface">Related Courses</h4>
+                <div className="space-y-3">
+                  {relatedCourses.map((rc) => (
                     <Link
-                      key={r.slug}
-                      to={`/courses/${r.slug}`}
-                      className="flex items-center gap-4 rounded-xl border border-surface-dim bg-surface-container-lowest p-4 transition-shadow hover:shadow-[var(--shadow-card-sm)]"
+                      key={rc._id}
+                      to={`/courses/${rc._id}`}
+                      className="flex gap-3 rounded-xl border border-surface-dim bg-surface-container-lowest p-3 transition-shadow hover:shadow-[var(--shadow-card-md)]"
                     >
-                      <img src={r.thumb} alt="" className="h-14 w-14 rounded-lg object-cover" />
-                      <div>
-                        <p className="font-semibold text-on-surface">{r.title}</p>
-                        <p className="font-bold text-secondary">${r.price.toFixed(2)}</p>
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-accent-design">
+                        {rc.thumbnail && <img src={`${IMG_BASE}${rc.thumbnail}`} alt="" className="h-full w-full object-cover" />}
+                      </div>
+                      <div className="flex flex-col justify-center">
+                        <p className="line-clamp-2 text-sm font-semibold text-on-surface">{rc.title}</p>
+                        <span className="mt-1 text-sm font-bold text-secondary">{rc.price ? `$${rc.price}` : 'Free'}</span>
                       </div>
                     </Link>
                   ))}
@@ -426,7 +407,7 @@ function CourseDetail() {
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }

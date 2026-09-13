@@ -12,7 +12,7 @@ function StarIcon() {
 function CourseCard({ course }) {
   return (
     <Link
-      to={`/courses/${course.slug}`}
+      to="/courses"
       className="block w-80 shrink-0 overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest transition-shadow hover:shadow-[var(--shadow-card-md)]"
     >
       <div className="relative h-56">
