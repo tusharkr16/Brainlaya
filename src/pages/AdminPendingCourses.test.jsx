@@ -1,5 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { Routes, Route, MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { render } from '@testing-library/react'
 import { renderWithProviders, mockFetch } from '../test/test-utils'
 import AdminPendingCourses from './AdminPendingCourses'
 import { useAuthStore } from '../store/authStore'
@@ -47,7 +50,7 @@ describe('AdminPendingCourses (approve smoke flow)', () => {
     )
   })
 
-  it('opens the course details modal with the full description', async () => {
+  it('navigates to the full course details page on "View Details"', async () => {
     useAuthStore.setState({
       user: { id: 'a1', name: 'Ada Admin', role: 'admin', email: 'admin@test.dev' },
       accessToken: 'token-123',
@@ -71,15 +74,23 @@ describe('AdminPendingCourses (approve smoke flow)', () => {
         ],
         meta: { total: 1, page: 1, limit: 20, totalPages: 1 },
       },
-      'GET /lessons/course/course1': { success: true, data: [] },
     })
 
-    renderWithProviders(<AdminPendingCourses />)
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/admin/courses/pending']}>
+          <Routes>
+            <Route path="/admin/courses/pending" element={<AdminPendingCourses />} />
+            <Route path="/admin/courses/:id" element={<div>Course details page</div>} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
 
     expect(await screen.findByText('Modern UX/UI Design')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /view details/i }))
 
-    expect(await screen.findByText('Learn the fundamentals of user-centered design.')).toBeInTheDocument()
-    expect(screen.getByText(/marcus@test\.dev/)).toBeInTheDocument()
+    expect(await screen.findByText('Course details page')).toBeInTheDocument()
   })
 })

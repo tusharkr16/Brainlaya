@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
+import logo from '../assets/logo.png'
 
 const HOME_BY_ROLE = { teacher: '/teacher', student: '/student', admin: '/admin' }
 
@@ -14,16 +15,8 @@ const NAV_LINKS = [
 function Logo() {
   return (
     <Link to="/" className="flex items-center gap-2.5 whitespace-nowrap text-[26px] font-extrabold text-primary">
-      <span className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-surface-dim bg-white px-2 py-1.5 shadow-[var(--shadow-card-sm)]">
-        <svg viewBox="0 0 24 24" width="26" height="26">
-          <rect x="2" y="2" width="9" height="9" rx="2.5" fill="#f97316" />
-          <rect x="13" y="2" width="9" height="9" rx="2.5" fill="#2563eb" />
-          <rect x="2" y="13" width="9" height="9" rx="2.5" fill="#1d4e43" />
-          <rect x="13" y="13" width="9" height="9" rx="2.5" fill="#d9f99d" />
-        </svg>
-        <span className="text-[5px] leading-none font-bold tracking-wider text-on-surface-variant">
-          BRAINALAYA
-        </span>
+      <span className="flex h-14 w-14 items-center justify-center rounded-xl border border-surface-dim bg-white p-2 shadow-[var(--shadow-card-sm)]">
+        <img src={logo} alt="Brainlaya" className="h-full w-full object-contain" />
       </span>
       Brainlaya
     </Link>

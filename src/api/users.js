@@ -10,6 +10,23 @@ export function useTeacherProfile(id) {
   })
 }
 
+function toQueryString(params = {}) {
+  const usp = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') usp.set(key, value)
+  })
+  const qs = usp.toString()
+  return qs ? `?${qs}` : ''
+}
+
+export function useMentors(filters = {}) {
+  return useQuery({
+    queryKey: ['mentors', filters],
+    queryFn: () => api.get(`/users${toQueryString({ ...filters, role: 'teacher' })}`),
+    placeholderData: (prev) => prev,
+  })
+}
+
 export function useUpdateProfile() {
   const qc = useQueryClient()
   return useMutation({

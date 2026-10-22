@@ -1,20 +1,19 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import DashboardShell from '../components/DashboardShell'
-import CourseDetailsModal from '../components/CourseDetailsModal'
 import { useAdminCourses, useArchiveCourse } from '../api/admin'
 import { useDeleteCourse } from '../api/courses'
 import { LoadingState, ErrorState, EmptyState } from '../components/StateViews'
 import { STATUS_BADGE } from '../lib/constants'
 
 function AdminCourses() {
+  const navigate = useNavigate()
   const [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
   const { data, isPending, isError, error, refetch } = useAdminCourses({ status, page, limit: 20 })
   const archiveCourse = useArchiveCourse()
   const deleteCourse = useDeleteCourse()
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
-  const [viewingCourse, setViewingCourse] = useState(null)
 
   const courses = data?.data || []
   const meta = data?.meta
@@ -77,7 +76,7 @@ function AdminCourses() {
                     return (
                       <tr key={course._id}>
                         <td className="px-5 py-4">
-                          <button type="button" onClick={() => setViewingCourse(course)} className="text-left">
+                          <button type="button" onClick={() => navigate(`/admin/courses/${course._id}`)} className="text-left">
                             <p className="font-semibold text-on-surface hover:underline">{course.title}</p>
                             <p className="text-xs text-on-surface-variant">{course.category}</p>
                           </button>
@@ -150,7 +149,6 @@ function AdminCourses() {
         .
       </p>
 
-      {viewingCourse && <CourseDetailsModal course={viewingCourse} onClose={() => setViewingCourse(null)} />}
     </DashboardShell>
   )
 }

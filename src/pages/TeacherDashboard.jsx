@@ -14,17 +14,6 @@ function PlusIcon() {
   )
 }
 
-function UsersIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3.5 19c.6-3.2 3-5 5.5-5s4.9 1.8 5.5 5" />
-      <circle cx="17" cy="9" r="2.6" />
-      <path d="M15.2 14.3c1.9.4 3.4 1.9 3.8 4.2" />
-    </svg>
-  )
-}
-
 function BookOpenIcon() {
   return (
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -34,35 +23,34 @@ function BookOpenIcon() {
   )
 }
 
-function ClockIcon() {
+function DotsIcon() {
   return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M12 7v5l3.5 2" />
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+      <circle cx="5" cy="12" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="19" cy="12" r="1.6" />
     </svg>
   )
 }
 
-function EyeIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M2 12c1.8-4 5.8-7 10-7s8.2 3 10 7c-1.8 4-5.8 7-10 7s-8.2-3-10-7Z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  )
-}
+const TILE_STYLES = [
+  { bg: '#ff5da2', text: 'text-white', sub: 'text-white/80', chip: 'bg-white/25 text-white' },
+  { bg: '#ffc94d', text: 'text-[#4a3400]', sub: 'text-[#4a3400]/70', chip: 'bg-black/10 text-[#4a3400]' },
+  { bg: '#7fa8ff', text: 'text-white', sub: 'text-white/80', chip: 'bg-white/25 text-white' },
+  { bg: '#9b7fff', text: 'text-white', sub: 'text-white/80', chip: 'bg-white/25 text-white' },
+]
 
-function StatCard({ icon: Icon, label, value, note }) {
+function StatTile({ style, label, value, note }) {
   return (
-    <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-5 shadow-[var(--shadow-card-sm)] transition-shadow hover:shadow-[var(--shadow-card-md)]">
-      <div className="mb-4 flex items-center justify-between">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-design text-secondary">
-          <Icon />
+    <div className="flex min-w-[200px] flex-1 flex-col justify-between rounded-2xl p-5" style={{ background: style.bg }}>
+      <div className="flex items-start justify-between">
+        <p className={`text-sm font-semibold ${style.sub}`}>{label}</p>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-full ${style.chip}`}>
+          <DotsIcon />
         </span>
-        {note && <span className="text-xs font-semibold text-on-surface-variant">{note}</span>}
       </div>
-      <p className="text-sm text-on-surface-variant">{label}</p>
-      <p className="mt-1 text-2xl font-extrabold text-on-surface">{value}</p>
+      <p className={`mt-4 text-[32px] leading-none font-extrabold ${style.text}`}>{value}</p>
+      {note && <p className={`mt-3 text-xs font-semibold ${style.sub}`}>{note}</p>}
     </div>
   )
 }
@@ -99,15 +87,15 @@ function TeacherDashboard() {
 
       {!isPending && !isError && (
         <>
-          <div className="mb-10 grid grid-cols-2 gap-5 lg:grid-cols-4">
-            <StatCard icon={UsersIcon} label="Total Students" value={totalStudents.toLocaleString()} />
-            <StatCard icon={BookOpenIcon} label="Courses" value={courses.length} note="All statuses" />
-            <StatCard icon={ClockIcon} label="Pending Review" value={pendingCount} />
-            <StatCard icon={EyeIcon} label="Total Views" value={totalViews.toLocaleString()} />
+          <div className="mb-10 flex flex-wrap gap-5">
+            <StatTile style={TILE_STYLES[0]} label="Total Students" value={totalStudents.toLocaleString()} />
+            <StatTile style={TILE_STYLES[1]} label="Courses" value={courses.length} note="All statuses" />
+            <StatTile style={TILE_STYLES[2]} label="Pending Review" value={pendingCount} />
+            <StatTile style={TILE_STYLES[3]} label="Total Views" value={totalViews.toLocaleString()} />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="overflow-hidden rounded-2xl border border-surface-dim bg-surface-container-lowest lg:col-span-2">
+            <div className="overflow-hidden rounded-2xl border border-surface-dim lg:col-span-2">
               <div className="flex items-center justify-between border-b border-surface-dim p-6">
                 <h2 className="text-xl font-bold text-on-surface">Recent Courses</h2>
                 <Link to="/teacher/courses" className="text-sm font-semibold text-secondary hover:underline">
@@ -166,18 +154,21 @@ function TeacherDashboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest">
-              <div className="border-b border-surface-dim p-6">
-                <h2 className="text-xl font-bold text-on-surface">Recent Activity</h2>
-              </div>
-              <div className="flex flex-col divide-y divide-surface-dim">
+            <div className="rounded-2xl border border-surface-dim p-5">
+              <h2 className="mb-4 text-lg font-bold text-on-surface">Recent Activity</h2>
+              <div className="flex flex-col gap-4">
                 {notifications.slice(0, 6).map((n) => (
-                  <div key={n._id} className="p-5">
-                    <p className="text-sm text-on-surface">{n.message}</p>
-                    <span className="mt-1 block text-xs text-on-surface-variant">{new Date(n.createdAt).toLocaleString()}</span>
+                  <div key={n._id} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eaf1ff] text-xs font-bold text-secondary">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm leading-snug text-on-surface">{n.message}</p>
+                      <p className="text-xs text-on-surface-variant">{new Date(n.createdAt).toLocaleString()}</p>
+                    </div>
                   </div>
                 ))}
-                {notifications.length === 0 && <p className="p-6 text-center text-sm text-on-surface-variant">No activity yet.</p>}
+                {notifications.length === 0 && <p className="text-sm text-on-surface-variant">No activity yet.</p>}
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { CATEGORIES } from '../lib/constants'
 import { api } from '../lib/api'
+import { ListFieldEditor, inputClass, selectClass, labelClass } from './ListFieldEditor'
 
 function ChevronDownIcon() {
   return (
@@ -19,11 +20,6 @@ function UploadIcon() {
   )
 }
 
-const inputClass =
-  'w-full rounded-lg border border-surface-dim bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/60 outline-none focus:border-secondary focus:ring-4 focus:ring-secondary/15'
-const selectClass = `${inputClass} appearance-none pr-10`
-const labelClass = 'block text-sm font-medium text-on-surface'
-
 // Shared by "create course" and the teacher's course-detail edit tab. Owns
 // the thumbnail upload (multer route) so both callers get it for free.
 function CourseForm({ initial, submitLabel, onSubmit, submitting, error, onCancel, freeToggle = true }) {
@@ -33,6 +29,8 @@ function CourseForm({ initial, submitLabel, onSubmit, submitting, error, onCance
     description: initial?.description || '',
     price: initial?.price ?? '',
     thumbnail: initial?.thumbnail || null,
+    outcomes: initial?.outcomes?.length ? initial.outcomes : [''],
+    requirements: initial?.requirements?.length ? initial.requirements : [''],
   })
   const [uploading, setUploading] = useState(false)
   const [isFree, setIsFree] = useState(initial ? initial.price == null : false)
@@ -63,6 +61,8 @@ function CourseForm({ initial, submitLabel, onSubmit, submitting, error, onCance
       description: form.description.trim(),
       price: isFree ? null : Number(form.price) || 0,
       thumbnail: form.thumbnail || null,
+      outcomes: form.outcomes.map((o) => o.trim()).filter(Boolean),
+      requirements: form.requirements.map((r) => r.trim()).filter(Boolean),
     })
   }
 
@@ -152,6 +152,20 @@ function CourseForm({ initial, submitLabel, onSubmit, submitting, error, onCance
             className={`${inputClass} resize-none`}
           />
         </div>
+
+        <ListFieldEditor
+          label="What you'll learn"
+          placeholder="e.g. Build a portfolio-ready project"
+          items={form.outcomes}
+          onChange={(outcomes) => setForm((f) => ({ ...f, outcomes }))}
+        />
+
+        <ListFieldEditor
+          label="Requirements"
+          placeholder="e.g. No prior experience needed"
+          items={form.requirements}
+          onChange={(requirements) => setForm((f) => ({ ...f, requirements }))}
+        />
 
         <div className="space-y-1.5">
           <span className={labelClass}>Course Thumbnail</span>

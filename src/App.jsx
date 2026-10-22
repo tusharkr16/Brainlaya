@@ -10,6 +10,7 @@ import Footer from './components/Footer'
 import Courses from './pages/Courses'
 import CourseDetail from './pages/CourseDetail'
 import Mentors from './pages/Mentors'
+import MentorProfile from './pages/MentorProfile'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -28,8 +29,10 @@ import StudentCourseLearn from './pages/StudentCourseLearn'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminPendingCourses from './pages/AdminPendingCourses'
 import AdminCourses from './pages/AdminCourses'
+import AdminCourseDetail from './pages/AdminCourseDetail'
 import AdminUsers from './pages/AdminUsers'
 import AdminAuditLog from './pages/AdminAuditLog'
+import AdminSchedule from './pages/AdminSchedule'
 
 function Landing() {
   return (
@@ -56,6 +59,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/:id" element={<CourseDetail />} />
         <Route path="/mentors" element={<Mentors />} />
+        <Route path="/users/:id" element={<MentorProfile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
 
@@ -72,8 +76,10 @@ function App() {
         <Route path="/student/profile" element={<ProtectedRoute roles={['student']}><ProfilePage /></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+        <Route path="/admin/schedule" element={<ProtectedRoute roles={['admin']}><AdminSchedule /></ProtectedRoute>} />
         <Route path="/admin/courses/pending" element={<ProtectedRoute roles={['admin']}><AdminPendingCourses /></ProtectedRoute>} />
         <Route path="/admin/courses" element={<ProtectedRoute roles={['admin']}><AdminCourses /></ProtectedRoute>} />
+        <Route path="/admin/courses/:id" element={<ProtectedRoute roles={['admin']}><AdminCourseDetail /></ProtectedRoute>} />
         <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
         <Route path="/admin/audit-log" element={<ProtectedRoute roles={['admin']}><AdminAuditLog /></ProtectedRoute>} />
       </Routes>

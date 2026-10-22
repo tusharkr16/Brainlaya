@@ -1,12 +1,9 @@
+import logo from '../assets/logo.png'
+
 export function BrandMark() {
   return (
-    <span className="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-xl border border-white/20 bg-white/10 px-2 py-1.5 backdrop-blur-sm">
-      <svg viewBox="0 0 24 24" width="26" height="26">
-        <rect x="2" y="2" width="9" height="9" rx="2.5" fill="#f97316" />
-        <rect x="13" y="2" width="9" height="9" rx="2.5" fill="#2563eb" />
-        <rect x="2" y="13" width="9" height="9" rx="2.5" fill="#ffffff" />
-        <rect x="13" y="13" width="9" height="9" rx="2.5" fill="#d9f99d" />
-      </svg>
+    <span className="flex h-14 w-14 items-center justify-center rounded-xl border border-white/20 bg-white/10 p-2 backdrop-blur-sm">
+      <img src={logo} alt="Brainlaya" className="h-full w-full object-contain" />
     </span>
   )
 }

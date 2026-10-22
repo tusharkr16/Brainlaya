@@ -1,7 +1,7 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import DashboardShell from '../components/DashboardShell'
 import { Modal } from '@/components/ui/modal'
-import CourseDetailsModal from '../components/CourseDetailsModal'
 import { usePendingCourses, useApproveCourse, useRejectCourse } from '../api/admin'
 import { LoadingState, ErrorState, EmptyState } from '../components/StateViews'
 
@@ -44,11 +44,11 @@ function RejectModal({ course, onClose, onReject, submitting, error }) {
 }
 
 function AdminPendingCourses() {
+  const navigate = useNavigate()
   const { data, isPending, isError, error, refetch } = usePendingCourses()
   const approveCourse = useApproveCourse()
   const rejectCourse = useRejectCourse()
   const [rejectingCourse, setRejectingCourse] = useState(null)
-  const [viewingCourse, setViewingCourse] = useState(null)
 
   const courses = data?.data || []
 
@@ -71,7 +71,7 @@ function AdminPendingCourses() {
               const isEdit = course.status === 'approved' && course.pendingChanges
               return (
                 <div key={course._id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-surface-dim bg-surface-container-lowest p-5">
-                  <button type="button" onClick={() => setViewingCourse(course)} className="flex-1 text-left">
+                  <button type="button" onClick={() => navigate(`/admin/courses/${course._id}`)} className="flex-1 text-left">
                     <span
                       className={
                         isEdit
@@ -94,7 +94,7 @@ function AdminPendingCourses() {
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setViewingCourse(course)}
+                      onClick={() => navigate(`/admin/courses/${course._id}`)}
                       className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
                     >
                       View Details
@@ -139,35 +139,6 @@ function AdminPendingCourses() {
               { id: rejectingCourse._id, reason },
               { onSuccess: () => setRejectingCourse(null) }
             )
-          }
-        />
-      )}
-
-      {viewingCourse && (
-        <CourseDetailsModal
-          course={viewingCourse}
-          onClose={() => setViewingCourse(null)}
-          actions={
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => approveCourse.mutate(viewingCourse._id, { onSuccess: () => setViewingCourse(null) })}
-                disabled={approveCourse.isPending}
-                className="flex-1 rounded-lg bg-brand-green px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-green/90 disabled:opacity-60"
-              >
-                Approve
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setRejectingCourse(viewingCourse)
-                  setViewingCourse(null)
-                }}
-                className="flex-1 rounded-lg border border-error/30 px-4 py-2.5 text-sm font-bold text-error transition-colors hover:bg-error/10"
-              >
-                Reject
-              </button>
-            </div>
           }
         />
       )}

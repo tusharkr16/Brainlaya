@@ -1,11 +1,184 @@
 import { useState } from 'react'
 import DashboardShell from '../components/DashboardShell'
 import { Modal } from '@/components/ui/modal'
-import { useAdminUsers, useSuspendUser, useReactivateUser, useChangeUserRole, useResetUser } from '../api/admin'
+import {
+  useAdminUsers,
+  useSuspendUser,
+  useReactivateUser,
+  useChangeUserRole,
+  useResetUser,
+  useCreateUser,
+  useUpdateUser,
+  useSetUserPassword,
+  useDeleteUser,
+} from '../api/admin'
 import { LoadingState, ErrorState, EmptyState } from '../components/StateViews'
 import { useAuthStore } from '../store/authStore'
 
 const ROLE_OPTIONS = ['student', 'teacher', 'admin']
+
+function CreateUserModal({ onClose }) {
+  const createUser = useCreateUser()
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'student' })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    createUser.mutate(form, { onSuccess: onClose })
+  }
+
+  return (
+    <Modal open onClose={onClose} className="max-w-md p-7">
+      <h3 className="mb-5 text-xl font-bold text-on-surface">Add a user</h3>
+      {createUser.error && <p className="mb-4 rounded-lg bg-error/10 px-4 py-2.5 text-sm font-medium text-error">{createUser.error.message}</p>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <input
+          type="text"
+          required
+          autoFocus
+          placeholder="Full name"
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <input
+          type="email"
+          required
+          placeholder="Email address"
+          value={form.email}
+          onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <input
+          type="password"
+          required
+          minLength={8}
+          placeholder="Password (min 8 characters)"
+          value={form.password}
+          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <select
+          value={form.role}
+          onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        >
+          {ROLE_OPTIONS.map((r) => (
+            <option key={r} value={r}>
+              {r}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          disabled={createUser.isPending}
+          className="rounded-lg bg-secondary py-2.5 text-sm font-bold text-white transition-colors hover:bg-secondary-hover disabled:opacity-50"
+        >
+          {createUser.isPending ? 'Creating…' : 'Create User'}
+        </button>
+      </form>
+    </Modal>
+  )
+}
+
+function EditUserModal({ user, onClose }) {
+  const updateUser = useUpdateUser()
+  const setPassword = useSetUserPassword()
+  const [name, setName] = useState(user.name)
+  const [email, setEmail] = useState(user.email)
+  const [password, setPasswordValue] = useState('')
+  const [saved, setSaved] = useState(false)
+
+  const error = updateUser.error || setPassword.error
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaved(false)
+    await updateUser.mutateAsync({ id: user._id, name, email })
+    if (password) await setPassword.mutateAsync({ id: user._id, password })
+    setPasswordValue('')
+    setSaved(true)
+  }
+
+  return (
+    <Modal open onClose={onClose} className="max-w-md p-7">
+      <h3 className="mb-1 text-xl font-bold text-on-surface">Edit user</h3>
+      <p className="mb-5 text-sm text-on-surface-variant">Update details, or set a new password.</p>
+      {error && <p className="mb-4 rounded-lg bg-error/10 px-4 py-2.5 text-sm font-medium text-error">{error.message}</p>}
+      {saved && <p className="mb-4 rounded-lg bg-brand-green/10 px-4 py-2.5 text-sm font-medium text-brand-green">Saved.</p>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <input
+          type="text"
+          required
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <input
+          type="email"
+          required
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <input
+          type="password"
+          minLength={8}
+          placeholder="New password (leave blank to keep current)"
+          value={password}
+          onChange={(e) => setPasswordValue(e.target.value)}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <button
+          type="submit"
+          disabled={updateUser.isPending || setPassword.isPending}
+          className="rounded-lg bg-secondary py-2.5 text-sm font-bold text-white transition-colors hover:bg-secondary-hover disabled:opacity-50"
+        >
+          {updateUser.isPending || setPassword.isPending ? 'Saving…' : 'Save Changes'}
+        </button>
+      </form>
+    </Modal>
+  )
+}
+
+function DeleteUserModal({ user, onClose }) {
+  const deleteUser = useDeleteUser()
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const matches = confirmEmail.trim().toLowerCase() === user.email.toLowerCase()
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    deleteUser.mutate(user._id, { onSuccess: onClose })
+  }
+
+  return (
+    <Modal open onClose={onClose} className="max-w-md p-7">
+      <h3 className="mb-1 text-xl font-bold text-on-surface">Delete this user</h3>
+      <p className="mb-5 text-sm text-on-surface-variant">
+        This permanently deletes <strong>{user.name}</strong>&apos;s account. This cannot be undone. Type{' '}
+        <span className="font-mono font-bold text-on-surface">{user.email}</span> to confirm.
+      </p>
+      {deleteUser.error && <p className="mb-4 rounded-lg bg-error/10 px-4 py-2.5 text-sm font-medium text-error">{deleteUser.error.message}</p>}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <input
+          type="email"
+          required
+          autoFocus
+          placeholder={user.email}
+          value={confirmEmail}
+          onChange={(e) => setConfirmEmail(e.target.value)}
+          className="rounded-lg border border-surface-dim px-4 py-2.5 text-sm text-on-surface outline-none focus:border-secondary"
+        />
+        <button
+          type="submit"
+          disabled={!matches || deleteUser.isPending}
+          className="rounded-lg bg-error px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-error/90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {deleteUser.isPending ? 'Deleting…' : 'Delete User'}
+        </button>
+      </form>
+    </Modal>
+  )
+}
 
 function ResetUserModal({ user, onClose }) {
   const resetUser = useResetUser()
@@ -77,6 +250,9 @@ function AdminUsers() {
   const reactivateUser = useReactivateUser()
   const changeRole = useChangeUserRole()
   const [resettingUser, setResettingUser] = useState(null)
+  const [editingUser, setEditingUser] = useState(null)
+  const [deletingUser, setDeletingUser] = useState(null)
+  const [creating, setCreating] = useState(false)
 
   const users = data?.data || []
   const meta = data?.meta
@@ -115,6 +291,13 @@ function AdminUsers() {
               </option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="rounded-lg bg-secondary px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-secondary-hover"
+          >
+            + Add User
+          </button>
         </div>
       </div>
 
@@ -175,7 +358,14 @@ function AdminUsers() {
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingUser(u)}
+                            className="rounded-lg border border-surface-dim px-3 py-1.5 text-xs font-semibold text-on-surface transition-colors hover:bg-surface-container-low"
+                          >
+                            Edit
+                          </button>
                           {u.status === 'active' ? (
                             <button
                               type="button"
@@ -201,6 +391,14 @@ function AdminUsers() {
                             className="rounded-lg border border-error/30 px-3 py-1.5 text-xs font-semibold text-error transition-colors hover:bg-error/10"
                           >
                             Reset
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDeletingUser(u)}
+                            disabled={u._id === currentUser.id}
+                            className="rounded-lg bg-error/10 px-3 py-1.5 text-xs font-semibold text-error transition-colors hover:bg-error/20 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Delete
                           </button>
                         </div>
                       </td>
@@ -238,6 +436,9 @@ function AdminUsers() {
       )}
 
       {resettingUser && <ResetUserModal user={resettingUser} onClose={() => setResettingUser(null)} />}
+      {editingUser && <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} />}
+      {deletingUser && <DeleteUserModal user={deletingUser} onClose={() => setDeletingUser(null)} />}
+      {creating && <CreateUserModal onClose={() => setCreating(false)} />}
     </DashboardShell>
   )
 }

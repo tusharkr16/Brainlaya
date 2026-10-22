@@ -9,11 +9,30 @@ import { STATUS_BADGE } from '../lib/constants'
 
 const TABS = ['Details', 'Lessons', 'Students', 'Announcements']
 
+function CalendarIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3.5" y="5" width="17" height="15.5" rx="2" />
+      <path d="M3.5 9.5h17M8 3v3.5M16 3v3.5" />
+    </svg>
+  )
+}
+
+function LinkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 15 15 9" />
+      <path d="M11 6.5 12.5 5a3.5 3.5 0 0 1 5 5L16 11.5" />
+      <path d="M13 17.5 11.5 19a3.5 3.5 0 0 1-5-5L8 12.5" />
+    </svg>
+  )
+}
+
 function LessonsTab({ courseId }) {
   const { data, isPending, isError, error, refetch } = useLessons(courseId)
   const createLesson = useCreateLesson(courseId)
   const deleteLesson = useDeleteLesson(courseId)
-  const [form, setForm] = useState({ title: '', content: '' })
+  const [form, setForm] = useState({ title: '', content: '', scheduledAt: '', meetingLink: '' })
 
   if (isPending) return <LoadingState />
   if (isError) return <ErrorState message={error.message} onRetry={refetch} />
@@ -23,8 +42,14 @@ function LessonsTab({ courseId }) {
   const handleAdd = (e) => {
     e.preventDefault()
     createLesson.mutate(
-      { title: form.title, content: form.content, order: lessons.length },
-      { onSuccess: () => setForm({ title: '', content: '' }) }
+      {
+        title: form.title,
+        content: form.content,
+        order: lessons.length,
+        scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
+        meetingLink: form.meetingLink.trim() || null,
+      },
+      { onSuccess: () => setForm({ title: '', content: '', scheduledAt: '', meetingLink: '' }) }
     )
   }
 
@@ -49,6 +74,30 @@ function LessonsTab({ courseId }) {
             onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))}
             className="resize-none rounded-lg border border-surface-dim bg-surface px-3 py-2 text-sm outline-none focus:border-secondary"
           />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-on-surface-variant">Live session time (optional)</span>
+              <input
+                type="datetime-local"
+                value={form.scheduledAt}
+                onChange={(e) => setForm((f) => ({ ...f, scheduledAt: e.target.value }))}
+                className="rounded-lg border border-surface-dim bg-surface px-3 py-2 text-sm outline-none focus:border-secondary"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-semibold text-on-surface-variant">Meeting link (optional)</span>
+              <input
+                type="url"
+                placeholder="https://zoom.us/j/..."
+                value={form.meetingLink}
+                onChange={(e) => setForm((f) => ({ ...f, meetingLink: e.target.value }))}
+                className="rounded-lg border border-surface-dim bg-surface px-3 py-2 text-sm outline-none focus:border-secondary"
+              />
+            </label>
+          </div>
+          <p className="text-xs text-on-surface-variant">
+            A scheduled time and meeting link are shown publicly on the course page, even to visitors who haven&apos;t enrolled.
+          </p>
           <button
             type="submit"
             disabled={createLesson.isPending}
@@ -70,6 +119,22 @@ function LessonsTab({ courseId }) {
                   {i + 1}. {lesson.title}
                 </p>
                 <p className="mt-1 line-clamp-2 text-xs text-on-surface-variant">{lesson.content}</p>
+                {(lesson.scheduledAt || lesson.meetingLink) && (
+                  <div className="mt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-secondary">
+                    {lesson.scheduledAt && (
+                      <span className="flex items-center gap-1.5">
+                        <CalendarIcon />
+                        {new Date(lesson.scheduledAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                      </span>
+                    )}
+                    {lesson.meetingLink && (
+                      <a href={lesson.meetingLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:underline">
+                        <LinkIcon />
+                        Meeting link
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
               <button
                 type="button"

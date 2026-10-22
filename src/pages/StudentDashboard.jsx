@@ -7,6 +7,36 @@ import { LoadingState, ErrorState, EmptyState } from '../components/StateViews'
 
 const IMG_BASE = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001'
 
+function DotsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+      <circle cx="5" cy="12" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="19" cy="12" r="1.6" />
+    </svg>
+  )
+}
+
+const TILE_STYLES = [
+  { bg: '#ff5da2', text: 'text-white', sub: 'text-white/80', chip: 'bg-white/25 text-white' },
+  { bg: '#ffc94d', text: 'text-[#4a3400]', sub: 'text-[#4a3400]/70', chip: 'bg-black/10 text-[#4a3400]' },
+  { bg: '#7fa8ff', text: 'text-white', sub: 'text-white/80', chip: 'bg-white/25 text-white' },
+]
+
+function StatTile({ style, label, value }) {
+  return (
+    <div className="flex min-w-[200px] flex-1 flex-col justify-between rounded-2xl p-5" style={{ background: style.bg }}>
+      <div className="flex items-start justify-between">
+        <p className={`text-sm font-semibold ${style.sub}`}>{label}</p>
+        <span className={`flex h-7 w-7 items-center justify-center rounded-full ${style.chip}`}>
+          <DotsIcon />
+        </span>
+      </div>
+      <p className={`mt-4 text-[32px] leading-none font-extrabold ${style.text}`}>{value}</p>
+    </div>
+  )
+}
+
 function StudentDashboard() {
   const user = useAuthStore((s) => s.user)
   const { data, isPending, isError, error, refetch } = useMyEnrollments()
@@ -29,19 +59,10 @@ function StudentDashboard() {
 
       {!isPending && !isError && (
         <>
-          <div className="mb-10 grid grid-cols-2 gap-5 lg:grid-cols-3">
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-5">
-              <p className="text-sm text-on-surface-variant">Enrolled Courses</p>
-              <p className="mt-1 text-2xl font-extrabold text-on-surface">{enrollments.length}</p>
-            </div>
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-5">
-              <p className="text-sm text-on-surface-variant">Average Progress</p>
-              <p className="mt-1 text-2xl font-extrabold text-on-surface">{avgProgress}%</p>
-            </div>
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest p-5">
-              <p className="text-sm text-on-surface-variant">Completed</p>
-              <p className="mt-1 text-2xl font-extrabold text-on-surface">{enrollments.filter((e) => e.progress === 100).length}</p>
-            </div>
+          <div className="mb-10 flex flex-wrap gap-5">
+            <StatTile style={TILE_STYLES[0]} label="Enrolled Courses" value={enrollments.length} />
+            <StatTile style={TILE_STYLES[1]} label="Average Progress" value={`${avgProgress}%`} />
+            <StatTile style={TILE_STYLES[2]} label="Completed" value={enrollments.filter((e) => e.progress === 100).length} />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -86,18 +107,21 @@ function StudentDashboard() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-surface-dim bg-surface-container-lowest">
-              <div className="border-b border-surface-dim p-6">
-                <h2 className="text-xl font-bold text-on-surface">Recent Activity</h2>
-              </div>
-              <div className="flex flex-col divide-y divide-surface-dim">
+            <div className="rounded-2xl border border-surface-dim p-5">
+              <h2 className="mb-4 text-lg font-bold text-on-surface">Recent Activity</h2>
+              <div className="flex flex-col gap-4">
                 {notifications.slice(0, 6).map((n) => (
-                  <div key={n._id} className="p-5">
-                    <p className="text-sm text-on-surface">{n.message}</p>
-                    <span className="mt-1 block text-xs text-on-surface-variant">{new Date(n.createdAt).toLocaleString()}</span>
+                  <div key={n._id} className="flex items-start gap-3">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eaf1ff] text-xs font-bold text-secondary">
+                      {user?.name?.[0]?.toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm leading-snug text-on-surface">{n.message}</p>
+                      <p className="text-xs text-on-surface-variant">{new Date(n.createdAt).toLocaleString()}</p>
+                    </div>
                   </div>
                 ))}
-                {notifications.length === 0 && <p className="p-6 text-center text-sm text-on-surface-variant">No activity yet.</p>}
+                {notifications.length === 0 && <p className="text-sm text-on-surface-variant">No activity yet.</p>}
               </div>
             </div>
           </div>

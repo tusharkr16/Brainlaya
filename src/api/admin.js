@@ -67,6 +67,38 @@ function invalidateUserQueries(qc) {
   qc.invalidateQueries({ queryKey: ['adminUsers'] })
 }
 
+export function useCreateUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ name, email, password, role }) => api.post('/admin/users', { name, email, password, role }),
+    onSuccess: () => invalidateUserQueries(qc),
+  })
+}
+
+export function useUpdateUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, name, email }) => api.patch(`/admin/users/${id}`, { name, email }),
+    onSuccess: () => invalidateUserQueries(qc),
+  })
+}
+
+export function useSetUserPassword() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, password }) => api.patch(`/admin/users/${id}/password`, { password }),
+    onSuccess: () => invalidateUserQueries(qc),
+  })
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id) => api.delete(`/admin/users/${id}`),
+    onSuccess: () => invalidateUserQueries(qc),
+  })
+}
+
 export function useSuspendUser() {
   const qc = useQueryClient()
   return useMutation({
