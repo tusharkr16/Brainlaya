@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import DashboardShell from '../components/DashboardShell'
 import { useMyEnrollments } from '../api/enrollments'
@@ -33,13 +34,24 @@ function CheckIcon() {
   )
 }
 
+const FILTERS = ['All', 'In Progress', 'Completed', 'Not Started']
+
 function StudentCourses() {
+  const [filter, setFilter] = useState('All')
   const { data, isPending, isError, error, refetch } = useMyEnrollments()
   const enrollments = data?.data || []
 
   const completed = enrollments.filter((e) => e.progress === 100)
   const inProgress = enrollments.filter((e) => e.progress > 0 && e.progress < 100)
   const notStarted = enrollments.filter((e) => e.progress === 0)
+
+  const filtered =
+    filter === 'In Progress' ? inProgress :
+    filter === 'Completed' ? completed :
+    filter === 'Not Started' ? notStarted :
+    enrollments
+
+  const counts = { 'All': enrollments.length, 'In Progress': inProgress.length, 'Completed': completed.length, 'Not Started': notStarted.length }
 
   return (
     <DashboardShell active="My Learning">
@@ -72,30 +84,29 @@ function StudentCourses() {
           />
         ) : (
           <>
-            {/* Summary pills */}
-            <div className="mb-7 flex flex-wrap gap-3 text-sm">
-              <span className="rounded-full border border-surface-dim bg-surface-container-lowest px-4 py-1.5 font-semibold text-on-surface">
-                All ({enrollments.length})
-              </span>
-              {inProgress.length > 0 && (
-                <span className="rounded-full bg-blue-50 px-4 py-1.5 font-semibold text-blue-700">
-                  In Progress ({inProgress.length})
-                </span>
-              )}
-              {completed.length > 0 && (
-                <span className="rounded-full bg-green-50 px-4 py-1.5 font-semibold text-green-700">
-                  Completed ({completed.length})
-                </span>
-              )}
-              {notStarted.length > 0 && (
-                <span className="rounded-full bg-gray-50 px-4 py-1.5 font-semibold text-on-surface-variant">
-                  Not Started ({notStarted.length})
-                </span>
-              )}
+            {/* Filter tabs */}
+            <div className="mb-7 flex flex-wrap gap-2 text-sm">
+              {FILTERS.map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className={`rounded-full px-4 py-1.5 font-semibold transition-all ${
+                    filter === f
+                      ? 'bg-secondary text-white shadow-sm'
+                      : 'border border-surface-dim bg-surface-container-lowest text-on-surface-variant hover:border-secondary hover:text-secondary'
+                  }`}
+                >
+                  {f} <span className="ml-1 opacity-70">({counts[f]})</span>
+                </button>
+              ))}
             </div>
 
+            {filtered.length === 0 ? (
+              <EmptyState title={`No ${filter.toLowerCase()} courses`} description="Your courses in this category will appear here." />
+            ) : (
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {enrollments.map((e) => {
+              {filtered.map((e) => {
                 const isDone = e.progress === 100
                 const isNew = e.progress === 0
                 return (
@@ -163,6 +174,7 @@ function StudentCourses() {
                 )
               })}
             </div>
+            )}
           </>
         )
       )}

@@ -21,6 +21,13 @@ export function useEnroll() {
   })
 }
 
+export function useUpcomingSessions() {
+  return useQuery({
+    queryKey: ['upcomingSessions'],
+    queryFn: () => api.get('/enrollments/upcoming-sessions'),
+  })
+}
+
 export function useUnenroll() {
   const qc = useQueryClient()
   return useMutation({

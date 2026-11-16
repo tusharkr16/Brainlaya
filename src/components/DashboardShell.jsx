@@ -103,6 +103,24 @@ function CalendarIcon() {
   )
 }
 
+function BellNavIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  )
+}
+
+function AwardIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="8" r="6" />
+      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+    </svg>
+  )
+}
+
 function MenuIcon() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -127,8 +145,11 @@ const NAV_BY_ROLE = {
   ],
   student: [
     { label: 'Dashboard', icon: DashboardIcon, to: '/student' },
-    { label: 'Browse Courses', icon: CompassIcon, to: '/courses' },
+    { label: 'Explore Courses', icon: CompassIcon, to: '/courses' },
     { label: 'My Learning', icon: SchoolIcon, to: '/student/courses' },
+    { label: 'Schedule', icon: CalendarIcon, to: '/student/schedule' },
+    { label: 'Certificates', icon: AwardIcon, to: '/student/certificates' },
+    { label: 'Notifications', icon: BellNavIcon, to: '/student/notifications' },
     { label: 'Profile', icon: ProfileIcon, to: '/student/profile' },
   ],
   admin: [

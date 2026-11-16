@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import DashboardShell from '../components/DashboardShell'
-import { useMyEnrollments } from '../api/enrollments'
+import { useMyEnrollments, useUpcomingSessions } from '../api/enrollments'
 import { useAuthStore } from '../store/authStore'
 import { useNotificationStore } from '../store/notificationStore'
 import { LoadingState, ErrorState, EmptyState } from '../components/StateViews'
@@ -120,12 +120,29 @@ function timeAgo(iso) {
 }
 
 /* ── Main component ── */
+function VideoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="6" width="14" height="12" rx="2" /><path d="m22 8-6 4 6 4V8Z" />
+    </svg>
+  )
+}
+function ClockIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+    </svg>
+  )
+}
+
 function StudentDashboard() {
   const user = useAuthStore((s) => s.user)
   const { data, isPending, isError, error, refetch } = useMyEnrollments()
+  const { data: sessionsData } = useUpcomingSessions()
   const notifications = useNotificationStore((s) => s.items)
 
   const enrollments   = data?.data || []
+  const upcomingSessions = sessionsData?.data || []
   const completed     = enrollments.filter((e) => e.progress === 100)
   const inProgress    = enrollments.filter((e) => e.progress > 0 && e.progress < 100)
   const avgProgress   = enrollments.length
@@ -175,6 +192,44 @@ function StudentDashboard() {
             <StatTile tile={STAT_TILES[2]} value={completed.length} />
             <StatTile tile={STAT_TILES[3]} value={avgProgress} suffix="%" />
           </div>
+
+          {/* ── Upcoming Live Classes ── */}
+          {upcomingSessions.length > 0 && (
+            <div className="mb-8 rounded-2xl border border-surface-dim bg-surface-container-lowest p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-bold text-on-surface">Upcoming Live Classes</h2>
+                <Link to="/student/schedule" className="flex items-center gap-1 text-sm font-semibold text-secondary hover:underline">
+                  View schedule <ArrowIcon />
+                </Link>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                {upcomingSessions.slice(0, 3).map((s) => {
+                  const dt = new Date(s.scheduledAt)
+                  const now = Date.now()
+                  const diffMs = dt.getTime() - now
+                  const diffH = Math.floor(diffMs / 3600000)
+                  const diffM = Math.floor((diffMs % 3600000) / 60000)
+                  const timeLabel = diffH > 24 ? `in ${Math.floor(diffH / 24)}d` : diffH > 0 ? `in ${diffH}h ${diffM}m` : `in ${diffM}m`
+                  return (
+                    <div key={s._id} className="flex flex-1 min-w-[220px] items-start gap-3 rounded-xl border border-surface-dim bg-surface-container-low p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-secondary">
+                        <VideoIcon />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-on-surface text-sm leading-snug line-clamp-1">{s.title}</p>
+                        <p className="mt-0.5 text-xs text-on-surface-variant line-clamp-1">{s.courseId?.title}</p>
+                        <div className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-amber-700">
+                          <ClockIcon />
+                          <span>{dt.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · {dt.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</span>
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5">{timeLabel}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ── Main grid ── */}
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_320px]">
