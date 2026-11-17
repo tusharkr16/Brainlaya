@@ -121,6 +121,16 @@ function AwardIcon() {
   )
 }
 
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  )
+}
+
 function MenuIcon() {
   return (
     <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -142,6 +152,8 @@ const NAV_BY_ROLE = {
     { label: 'Dashboard', icon: DashboardIcon, to: '/teacher' },
     { label: 'My Courses', icon: SchoolIcon, to: '/teacher/courses' },
     { label: 'Profile', icon: ProfileIcon, to: '/teacher/profile' },
+    { label: 'Settings', icon: SettingsIcon, to: '/teacher/settings' },
+    { label: 'Help', icon: HelpIcon, to: '/teacher/help' },
   ],
   student: [
     { label: 'Dashboard', icon: DashboardIcon, to: '/student' },
@@ -151,6 +163,8 @@ const NAV_BY_ROLE = {
     { label: 'Certificates', icon: AwardIcon, to: '/student/certificates' },
     { label: 'Notifications', icon: BellNavIcon, to: '/student/notifications' },
     { label: 'Profile', icon: ProfileIcon, to: '/student/profile' },
+    { label: 'Settings', icon: SettingsIcon, to: '/student/settings' },
+    { label: 'Help', icon: HelpIcon, to: '/student/help' },
   ],
   admin: [
     { label: 'Dashboard', icon: DashboardIcon, to: '/admin' },

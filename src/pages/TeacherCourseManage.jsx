@@ -37,7 +37,7 @@ function LessonsTab({ courseId }) {
   const { data, isPending, isError, error, refetch } = useLessons(courseId)
   const createLesson = useCreateLesson(courseId)
   const deleteLesson = useDeleteLesson(courseId)
-  const EMPTY = { title: '', content: '', videoLink: '', scheduledAt: '', meetingLink: '' }
+  const EMPTY = { title: '', content: '', videoLink: '', scheduledAt: '', meetingLink: '', recordingLink: '' }
   const [form, setForm] = useState(EMPTY)
   const [mode, setMode] = useState('link') // 'link' | 'text'
 
@@ -56,6 +56,7 @@ function LessonsTab({ courseId }) {
         order: lessons.length,
         scheduledAt: form.scheduledAt ? new Date(form.scheduledAt).toISOString() : null,
         meetingLink: form.meetingLink.trim() || null,
+        recordingLink: form.recordingLink.trim() || null,
       },
       { onSuccess: () => setForm(EMPTY) }
     )
@@ -174,6 +175,19 @@ function LessonsTab({ courseId }) {
               </div>
             </div>
 
+            {/* Recording link */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-on-surface-variant">Session Recording Link (optional)</label>
+              <input
+                type="url"
+                placeholder="https://youtube.com/watch?v=... or Zoom recording URL"
+                value={form.recordingLink}
+                onChange={(e) => setForm((f) => ({ ...f, recordingLink: e.target.value }))}
+                className="rounded-xl border border-surface-dim bg-surface px-3 py-2.5 text-sm outline-none focus:border-secondary"
+              />
+              <p className="text-xs text-on-surface-variant">Add after the session so students can review the recording.</p>
+            </div>
+
             <div className="flex items-center justify-between pt-1">
               <p className="text-xs text-on-surface-variant">Scheduled time and meeting link are visible publicly on the course page.</p>
               <button
@@ -220,6 +234,16 @@ function LessonsTab({ courseId }) {
                       </a>
                     )}
 
+                    {lesson.recordingLink && (
+                      <a
+                        href={lesson.recordingLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-1.5 inline-flex items-center gap-1.5 rounded-lg bg-purple-50 border border-purple-100 px-2.5 py-1 text-xs font-semibold text-purple-700 hover:bg-purple-100 transition-colors"
+                      >
+                        <PlayIcon /> Recording <ExternalIcon />
+                      </a>
+                    )}
                     {lesson.content && (
                       <p className="mt-1 line-clamp-2 text-xs text-on-surface-variant">{lesson.content}</p>
                     )}

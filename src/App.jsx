@@ -28,6 +28,8 @@ import StudentCourseLearn from './pages/StudentCourseLearn'
 import StudentSchedule from './pages/StudentSchedule'
 import StudentNotifications from './pages/StudentNotifications'
 import StudentCertificates from './pages/StudentCertificates'
+import SettingsPage from './pages/SettingsPage'
+import HelpPage from './pages/HelpPage'
 
 import AdminDashboard from './pages/AdminDashboard'
 import AdminPendingCourses from './pages/AdminPendingCourses'
@@ -80,6 +82,11 @@ function App() {
         <Route path="/student/notifications" element={<ProtectedRoute roles={['student']}><StudentNotifications /></ProtectedRoute>} />
         <Route path="/student/certificates" element={<ProtectedRoute roles={['student']}><StudentCertificates /></ProtectedRoute>} />
         <Route path="/student/profile" element={<ProtectedRoute roles={['student']}><ProfilePage /></ProtectedRoute>} />
+        <Route path="/student/settings" element={<ProtectedRoute roles={['student']}><SettingsPage /></ProtectedRoute>} />
+        <Route path="/student/help" element={<ProtectedRoute roles={['student']}><HelpPage /></ProtectedRoute>} />
+
+        <Route path="/teacher/settings" element={<ProtectedRoute roles={['teacher']}><SettingsPage /></ProtectedRoute>} />
+        <Route path="/teacher/help" element={<ProtectedRoute roles={['teacher']}><HelpPage /></ProtectedRoute>} />
 
         <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
         <Route path="/admin/schedule" element={<ProtectedRoute roles={['admin']}><AdminSchedule /></ProtectedRoute>} />
